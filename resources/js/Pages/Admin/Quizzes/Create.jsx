@@ -92,7 +92,7 @@ const QuestionTypeSelect = ({ value, onChange }) => {
     );
 };
 
-export default function Create() {
+export default function Create({ jobPosts, preselectedJobId }) {
     const [expandedQuestions, setExpandedQuestions] = useState([0]);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [aiConfig, setAiConfig] = useState({
@@ -104,6 +104,7 @@ export default function Create() {
     const [aiError, setAiError] = useState(null);
 
     const { data, setData, post, processing, errors, transform } = useForm({
+        job_post_id: preselectedJobId || "",
         title: "",
         description: "",
         time_per_question: 30,
@@ -695,6 +696,35 @@ export default function Create() {
                                     {errors.title && (
                                         <p className="text-sm text-red-600">
                                             {errors.title}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">
+                                        Associate with Job Post
+                                    </label>
+                                    <select
+                                        value={data.job_post_id}
+                                        onChange={(e) =>
+                                            setData(
+                                                "job_post_id",
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                    >
+                                        <option value="">
+                                            Select a Job (Optional)
+                                        </option>
+                                        {jobPosts?.map((job) => (
+                                            <option key={job.id} value={job.id}>
+                                                {job.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.job_post_id && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.job_post_id}
                                         </p>
                                     )}
                                 </div>

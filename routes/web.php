@@ -9,8 +9,7 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+        'jobs' => \App\Models\JobPost::where('status', 'active')->latest()->take(3)->get(),
     ]);
 });
 
@@ -27,11 +26,23 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/settings', function () {
         return Inertia::render('Admin/Settings/Edit');
     })->name('settings.edit');
+    
+    // Quiz Admin Routes
     Route::get('/quizzes/results', [App\Http\Controllers\Admin\QuizController::class, 'results'])->name('quizzes.results');
     Route::get('/quizzes/attempts/{attempt}', [App\Http\Controllers\Admin\QuizController::class, 'showAttempt'])->name('quizzes.attempts.show');
     Route::post('/quizzes/answers/{answer}/grade', [App\Http\Controllers\Admin\QuizController::class, 'grade'])->name('quizzes.answers.grade');
     Route::post('/quizzes/generate-questions', [App\Http\Controllers\Admin\AiQuizController::class, 'generate'])->name('quizzes.generate-questions');
     Route::resource('quizzes', App\Http\Controllers\Admin\QuizController::class);
+
+    // Hiring Admin Routes
+    Route::resource('jobs', App\Http\Controllers\Admin\JobPostController::class);
+    Route::get('/applications', [App\Http\Controllers\Admin\ApplicationController::class, 'index'])->name('applications.index');
+    Route::get('/applications/{application}', [App\Http\Controllers\Admin\ApplicationController::class, 'show'])->name('applications.show');
+    Route::post('/applications/{application}/status', [App\Http\Controllers\Admin\ApplicationController::class, 'updateStatus'])->name('applications.status');
+    Route::post('/applications/{application}/email', [App\Http\Controllers\Admin\ApplicationController::class, 'sendEmail'])->name('applications.email');
+
+    // Email Template Routes
+    Route::resource('email-templates', App\Http\Controllers\Admin\EmailTemplateController::class);
 });
 
 // Public Quiz Routes
@@ -40,5 +51,12 @@ Route::post('/quiz/start/{quiz}', [App\Http\Controllers\PublicQuizController::cl
 Route::post('/quiz/submit-answer', [App\Http\Controllers\PublicQuizController::class, 'submitAnswer'])->name('quiz.answer.submit');
 Route::post('/quiz/complete/{attempt}', [App\Http\Controllers\PublicQuizController::class, 'completeAttempt'])->name('quiz.attempt.complete');
 Route::get('/quiz/completed', [App\Http\Controllers\PublicQuizController::class, 'completed'])->name('quiz.completed');
+
+// Public Job Board Routes
+Route::prefix('jobs')->name('jobs.')->group(function () {
+    Route::get('/', [App\Http\Controllers\JobBoardController::class, 'index'])->name('index');
+    Route::get('/{slug}', [App\Http\Controllers\JobBoardController::class, 'show'])->name('show');
+    Route::post('/{job}/apply', [App\Http\Controllers\JobBoardController::class, 'apply'])->name('apply');
+});
 
 require __DIR__.'/auth.php';
