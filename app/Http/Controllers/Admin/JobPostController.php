@@ -18,6 +18,31 @@ class JobPostController extends Controller
         ]);
     }
 
+    public function show(JobPost $job)
+    {
+        $job->loadCount('applications');
+        
+        $applications = $job->applications()
+            ->select('job_applications.*')
+            ->selectSub(function ($query) {
+                $query->from('quiz_attempts')
+                    ->select('score')
+                    ->whereColumn('quiz_attempts.email', 'job_applications.email')
+                    ->latest()
+                    ->limit(1);
+            }, 'quiz_score')
+            ->latest()
+            ->get();
+
+        $quiz = $job->quizzes()->withCount('attempts')->first();
+
+        return Inertia::render('Admin/Jobs/Show', [
+            'job' => $job,
+            'applications' => $applications,
+            'quiz' => $quiz,
+        ]);
+    }
+
     public function create()
     {
         return Inertia::render('Admin/Jobs/Create');
@@ -34,7 +59,13 @@ class JobPostController extends Controller
             'stack' => 'nullable|array',
             'type' => 'required|in:full_time,part_time,contract,internship',
             'status' => 'required|in:active,closed,draft',
+            'technical_assignment' => 'nullable|string',
+            'technical_assignment_file' => 'nullable|file|mimes:pdf,zip,doc,docx|max:10240',
         ]);
+
+        if ($request->hasFile('technical_assignment_file')) {
+            $validated['technical_assignment_file'] = $request->file('technical_assignment_file')->store('assignments', 'public');
+        }
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . rand(1000, 9999);
 
@@ -61,7 +92,13 @@ class JobPostController extends Controller
             'stack' => 'nullable|array',
             'type' => 'required|in:full_time,part_time,contract,internship',
             'status' => 'required|in:active,closed,draft',
+            'technical_assignment' => 'nullable|string',
+            'technical_assignment_file' => 'nullable|file|mimes:pdf,zip,doc,docx|max:10240',
         ]);
+
+        if ($request->hasFile('technical_assignment_file')) {
+            $validated['technical_assignment_file'] = $request->file('technical_assignment_file')->store('assignments', 'public');
+        }
 
         $job->update($validated);
 

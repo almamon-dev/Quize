@@ -36,9 +36,11 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Hiring Admin Routes
     Route::resource('jobs', App\Http\Controllers\Admin\JobPostController::class);
+    Route::get('/applications/pipeline', [App\Http\Controllers\Admin\ApplicationController::class, 'pipeline'])->name('applications.pipeline');
     Route::get('/applications', [App\Http\Controllers\Admin\ApplicationController::class, 'index'])->name('applications.index');
     Route::get('/applications/{application}', [App\Http\Controllers\Admin\ApplicationController::class, 'show'])->name('applications.show');
     Route::post('/applications/{application}/status', [App\Http\Controllers\Admin\ApplicationController::class, 'updateStatus'])->name('applications.status');
+    Route::post('/applications/{application}/assessment', [App\Http\Controllers\Admin\ApplicationController::class, 'updateAssessment'])->name('applications.assessment');
     Route::post('/applications/{application}/email', [App\Http\Controllers\Admin\ApplicationController::class, 'sendEmail'])->name('applications.email');
 
     // Email Template Routes
@@ -57,6 +59,8 @@ Route::prefix('jobs')->name('jobs.')->group(function () {
     Route::get('/', [App\Http\Controllers\JobBoardController::class, 'index'])->name('index');
     Route::get('/{slug}', [App\Http\Controllers\JobBoardController::class, 'show'])->name('show');
     Route::post('/{job}/apply', [App\Http\Controllers\JobBoardController::class, 'apply'])->name('apply');
+    Route::get('/application/{id}/submit-task', [App\Http\Controllers\JobBoardController::class, 'submitTaskForm'])->name('application.task-form');
+    Route::post('/application/{id}/submit-task', [App\Http\Controllers\JobBoardController::class, 'submitTask'])->name('application.submit-task');
 });
 
 require __DIR__.'/auth.php';

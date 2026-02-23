@@ -4,7 +4,7 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import RichTextEditor from "@/Components/Form/RichTextEditor";
 
 export default function Edit({ job }) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, put, processing, errors } = useForm({
         title: job.title || "",
         company_name: job.company_name || "",
         department: job.department || "",
@@ -16,11 +16,16 @@ export default function Edit({ job }) {
         location: job.location || "",
         status: job.status || "active",
         stack: job.stack || [],
+        technical_assignment: job.technical_assignment || "",
+        technical_assignment_file: null,
+        _method: "PUT",
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(route("admin.jobs.update", job.id));
+        post(route("admin.jobs.update", job.id), {
+            forceFormData: true,
+        });
     };
 
     return (
@@ -224,6 +229,56 @@ export default function Edit({ job }) {
                                 placeholder="List candidate requirements..."
                                 error={errors.requirements}
                             />
+                        </div>
+
+                        <div className="mt-8 pt-8 border-t border-gray-100">
+                            <RichTextEditor
+                                label="Stage 3: Technical Assignment"
+                                value={data.technical_assignment}
+                                onChange={(val) =>
+                                    setData("technical_assignment", val)
+                                }
+                                placeholder="Detailed instructions for the technical task (GitHub submission required)..."
+                                error={errors.technical_assignment}
+                            />
+
+                            <div className="mt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-xs font-bold text-gray-700">
+                                        Assignment Instruction File (Optional)
+                                    </label>
+                                    {job.technical_assignment_file && (
+                                        <a
+                                            href={`/storage/${job.technical_assignment_file}`}
+                                            target="_blank"
+                                            className="text-[10px] text-blue-600 font-bold hover:underline"
+                                        >
+                                            View Current File
+                                        </a>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    onChange={(e) =>
+                                        setData(
+                                            "technical_assignment_file",
+                                            e.target.files[0],
+                                        )
+                                    }
+                                    className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-black file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                                />
+                                {errors.technical_assignment_file && (
+                                    <p className="mt-1 text-sm text-red-500">
+                                        {errors.technical_assignment_file}
+                                    </p>
+                                )}
+                            </div>
+
+                            <p className="mt-2 text-[10px] text-gray-400 font-medium italic">
+                                This assignment will be automatically sent to
+                                candidates when they are moved to the "Technical
+                                Test" stage.
+                            </p>
                         </div>
                     </div>
 

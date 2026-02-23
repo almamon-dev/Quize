@@ -95,7 +95,7 @@ export default function Index({ quizzes }) {
                                 <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
                                     <div className="flex items-center">
                                         <Clock className="w-3.5 h-3.5 mr-1" />
-                                        {quiz.time_per_question}s / question
+                                        {quiz.time_per_question} mins total
                                     </div>
                                     <div className="flex items-center">
                                         <GraduationCap className="w-3.5 h-3.5 mr-1" />

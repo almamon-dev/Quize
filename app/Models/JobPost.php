@@ -23,6 +23,10 @@ class JobPost extends Model
         'location_type',
         'location',
         'status',
+        'min_quiz_score',
+        'min_task_score',
+        'technical_assignment',
+        'technical_assignment_file',
     ];
 
     protected $casts = [

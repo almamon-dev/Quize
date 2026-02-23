@@ -34,8 +34,8 @@ export default function Index({ jobs }) {
                     </Link>
                 </div>
 
-                <div className="bg-white rounded border border-gray-200 overflow-hidden shadow-sm">
-                    <table className="w-full text-left">
+                <div className="bg-white rounded border border-gray-200 overflow-x-auto shadow-sm no-scrollbar">
+                    <table className="w-full text-left min-w-[900px]">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -67,9 +67,15 @@ export default function Index({ jobs }) {
                                                 <Briefcase size={18} />
                                             </div>
                                             <div>
-                                                <div className="font-bold text-gray-900">
+                                                <Link
+                                                    href={route(
+                                                        "admin.jobs.show",
+                                                        job.id,
+                                                    )}
+                                                    className="font-bold text-gray-900 hover:text-[#0a66c2] transition-colors"
+                                                >
                                                     {job.title}
-                                                </div>
+                                                </Link>
                                                 <div className="text-xs text-gray-500">
                                                     {job.type
                                                         .replace("_", " ")

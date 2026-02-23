@@ -16,11 +16,15 @@ export default function Create() {
         location: "",
         status: "active",
         stack: [],
+        technical_assignment: "",
+        technical_assignment_file: null,
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("admin.jobs.store"));
+        post(route("admin.jobs.store"), {
+            forceFormData: true,
+        });
     };
 
     return (
@@ -223,6 +227,39 @@ export default function Create() {
                                 placeholder="List candidate requirements..."
                                 error={errors.requirements}
                             />
+                        </div>
+
+                        <div className="mt-8 pt-8 border-t border-gray-100">
+                            <RichTextEditor
+                                label="Stage 3: Technical Assignment"
+                                value={data.technical_assignment}
+                                onChange={(val) =>
+                                    setData("technical_assignment", val)
+                                }
+                                placeholder="Detailed instructions for the technical task (GitHub submission required)..."
+                                error={errors.technical_assignment}
+                            />
+
+                            <div className="mt-4">
+                                <label className="block text-xs font-bold text-gray-700 mb-2">
+                                    Assignment Instruction File (Optional)
+                                </label>
+                                <input
+                                    type="file"
+                                    onChange={(e) =>
+                                        setData(
+                                            "technical_assignment_file",
+                                            e.target.files[0],
+                                        )
+                                    }
+                                    className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-black file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                                />
+                                {errors.technical_assignment_file && (
+                                    <p className="mt-1 text-xs text-red-500">
+                                        {errors.technical_assignment_file}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
 

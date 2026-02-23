@@ -52,7 +52,7 @@ export default function Index({ applications, filters, jobs, departments }) {
                     </div>
                 </div>
 
-                <div className="bg-white rounded border border-gray-200 overflow-hidden shadow-sm">
+                <div className="bg-white rounded border border-gray-200 overflow-x-auto shadow-sm no-scrollbar">
                     <div className="p-4 border-b border-gray-100 bg-gray-50/30 space-y-4">
                         <div className="flex flex-wrap items-center gap-3">
                             <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mr-2">
@@ -142,6 +142,9 @@ export default function Index({ applications, filters, jobs, departments }) {
                                     Status
                                 </th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Quiz Score
+                                </th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                     Expected Salary
                                 </th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -189,6 +192,29 @@ export default function Index({ applications, filters, jobs, departments }) {
                                             {app.status.replace("_", " ")}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4 text-center">
+                                        {app.quiz_score !== null ? (
+                                            <div className="flex flex-col items-center">
+                                                <div
+                                                    className={`text-sm font-bold ${app.quiz_score >= (app.job_post.min_quiz_score || 50) ? "text-emerald-600" : "text-red-500"}`}
+                                                >
+                                                    {Math.round(app.quiz_score)}
+                                                    %
+                                                </div>
+                                                <div className="text-[10px] text-gray-400 font-medium">
+                                                    {app.quiz_score >=
+                                                    (app.job_post
+                                                        .min_quiz_score || 50)
+                                                        ? "PASSED"
+                                                        : "FAILED"}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-gray-400 italic">
+                                                No Attempt
+                                            </span>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4">
                                         <span className="text-sm font-medium text-gray-600">
                                             {app.expected_salary || "N/A"}
@@ -202,13 +228,13 @@ export default function Index({ applications, filters, jobs, departments }) {
                                             ).toLocaleDateString()}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-right whitespace-nowrap">
                                         <Link
                                             href={route(
                                                 "admin.applications.show",
                                                 app.id,
                                             )}
-                                            className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-bold transition-all"
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-bold transition-all whitespace-nowrap"
                                         >
                                             View Details
                                             <ExternalLink size={12} />

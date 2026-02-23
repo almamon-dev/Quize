@@ -17,6 +17,7 @@ class DashboardController extends Controller
                 'users' => ['count' => User::count()],
                 'quizzes' => ['count' => Quiz::count()],
                 'attempts' => ['count' => QuizAttempt::count()],
+                'applications' => ['count' => \App\Models\JobApplication::count()],
                 'services' => ['count' => 0], // Placeholder or actual service count
             ],
             'openai_api_key' => config('services.openai.key') ?? '',

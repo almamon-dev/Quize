@@ -115,6 +115,53 @@ class PublicQuizController extends Controller
             'completed_at' => now(),
         ]);
 
+        // Recruitment Flow: Link to Job Application if applicable
+        $jobPostId = $attempt->quiz->job_post_id;
+        if ($jobPostId) {
+            $application = \App\Models\JobApplication::where('email', $attempt->email)
+                ->where('job_post_id', $jobPostId)
+                ->first();
+
+            if ($application) {
+                $quiz = $attempt->quiz;
+                $totalPossiblePoints = $quiz->questions()->sum('points');
+                
+                // Avoid division by zero
+                $percentage = $totalPossiblePoints > 0 ? ($totalScore / $totalPossiblePoints) : 0;
+                
+                $oldStatus = $application->status;
+                
+                // Logic for ranges:
+                // < 40% -> rejected
+                // 40% - 70% -> shortlisted
+                // >= 70% -> technical_test
+                if ($percentage < 0.4) {
+                    $newStatus = 'rejected';
+                    $message = "Rejected due to low score (" . round($percentage * 100) . "%).";
+                } elseif ($percentage < 0.7) {
+                    $newStatus = 'shortlisted';
+                    $message = "Shortlisted for further review (" . round($percentage * 100) . "%).";
+                } else {
+                    $newStatus = 'technical_test';
+                    $message = "Moved to technical test stage (" . round($percentage * 100) . "%).";
+                }
+
+                $application->update([
+                    'status' => $newStatus,
+                    'admin_note' => $application->admin_note . "\nQuiz completed. Score: {$totalScore}/{$totalPossiblePoints} (" . round($percentage * 100) . "%). {$message}",
+                ]);
+
+                // Log the transition
+                \App\Models\ApplicationLog::create([
+                    'job_application_id' => $application->id,
+                    'from_status' => $oldStatus,
+                    'to_status' => $newStatus,
+                    'comment' => "Automated scoring: {$totalScore}/{$totalPossiblePoints} (" . round($percentage * 100) . "%)",
+                    'user_id' => null, // Automated action
+                ]);
+            }
+        }
+
         return response()->json(['success' => true]);
     }
 

@@ -19,7 +19,13 @@ class JobApplication extends Model
         'expected_salary',
         'experience_years',
         'cover_letter',
+        'ranking_score',
+        'cv_analysis',
         'status',
+        'task_url',
+        'task_file_path',
+        'task_score',
+        'interview_note',
         'admin_note',
     ];
 
