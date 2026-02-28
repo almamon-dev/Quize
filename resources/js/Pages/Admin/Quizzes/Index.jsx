@@ -74,9 +74,19 @@ export default function Index({ quizzes }) {
                                     </div>
                                 </div>
 
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">
                                     {quiz.title}
                                 </h3>
+                                {quiz.job_post && (
+                                    <div className="flex items-center gap-1.5 mb-3">
+                                        <div className="p-1 bg-emerald-50 rounded text-emerald-600">
+                                            <GraduationCap className="w-3 h-3" />
+                                        </div>
+                                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
+                                            Linked to: {quiz.job_post.title}
+                                        </span>
+                                    </div>
+                                )}
                                 <p className="text-sm text-gray-500 line-clamp-2 mb-4">
                                     {quiz.description ||
                                         "No description provided."}
@@ -85,7 +95,7 @@ export default function Index({ quizzes }) {
                                 <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
                                     <div className="flex items-center">
                                         <Clock className="w-3.5 h-3.5 mr-1" />
-                                        {quiz.time_per_question}s / question
+                                        {quiz.time_per_question} mins total
                                     </div>
                                     <div className="flex items-center">
                                         <GraduationCap className="w-3.5 h-3.5 mr-1" />

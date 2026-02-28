@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
+use App\Models\JobPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -14,7 +15,8 @@ class QuizController extends Controller
 {
     public function index()
     {
-        $quizzes = Quiz::withCount('questions')
+        $quizzes = Quiz::with(['jobPost'])
+            ->withCount('questions')
             ->addSelect(['unique_attempts_count' => QuizAttempt::selectRaw('count(distinct email)')
                 ->whereColumn('quiz_id', 'quizzes.id')
             ])
@@ -26,14 +28,18 @@ class QuizController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return Inertia::render('Admin/Quizzes/Create');
+        return Inertia::render('Admin/Quizzes/Create', [
+            'jobPosts' => JobPost::where('status', 'active')->get(['id', 'title']),
+            'preselectedJobId' => $request->query('job_id'),
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'job_post_id' => 'nullable|exists:job_posts,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'time_per_question' => 'required|integer|min:1',
@@ -51,6 +57,7 @@ class QuizController extends Controller
 
         $quiz = Quiz::create([
             'title' => $validated['title'],
+            'job_post_id' => $validated['job_post_id'] ?? null,
             'description' => $validated['description'],
             'time_per_question' => $validated['time_per_question'],
             'is_published' => $validated['is_published'] ?? false,
@@ -90,12 +97,14 @@ class QuizController extends Controller
 
         return Inertia::render('Admin/Quizzes/Edit', [
             'quiz' => $quiz,
+            'jobPosts' => JobPost::where('status', 'active')->get(['id', 'title']),
         ]);
     }
 
     public function update(Request $request, Quiz $quiz)
     {
         $validated = $request->validate([
+            'job_post_id' => 'nullable|exists:job_posts,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'time_per_question' => 'required|integer|min:1',
@@ -115,6 +124,7 @@ class QuizController extends Controller
 
         $quiz->update([
             'title' => $validated['title'],
+            'job_post_id' => $validated['job_post_id'] ?? null,
             'description' => $validated['description'],
             'time_per_question' => $validated['time_per_question'],
             'is_published' => $validated['is_published'] ?? false,

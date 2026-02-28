@@ -152,6 +152,29 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
             icon: <Briefcase size={18} />,
             route: "admin.services.*",
         },
+        {
+            label: "Jobs",
+            key: "jobs",
+            icon: <Briefcase size={18} />,
+            children: [
+                {
+                    label: "All Jobs",
+                    path: "/admin/jobs",
+                    route: "admin.jobs.index",
+                },
+                {
+                    label: "Applications",
+                    path: "/admin/applications",
+                    route: "admin.applications.index",
+                },
+            ],
+        },
+        {
+            label: "Email Templates",
+            path: "/admin/email-templates",
+            icon: <Mail size={18} />,
+            route: "admin.email-templates.*",
+        },
     ];
 
     const hasPermission = (permission) => {

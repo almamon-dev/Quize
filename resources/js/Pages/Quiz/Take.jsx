@@ -133,11 +133,8 @@ export default function Take({ quiz }) {
                                 <div className="flex items-center justify-center gap-2 text-base font-bold text-gray-900">
                                     <span>Total Time:</span>
                                     <span className="bg-[#DF3D41] text-white px-2.5 py-1 rounded text-xs font-black min-w-[50px] text-center shadow-sm">
-                                        {(
-                                            (questions.length *
-                                                (quiz.time_per_question ||
-                                                    30)) /
-                                            60
+                                        {parseFloat(
+                                            quiz.time_per_question || 30,
                                         ).toFixed(2)}
                                     </span>
                                     <span>minutes</span>
