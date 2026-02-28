@@ -6,6 +6,7 @@ use App\Models\JobApplication;
 use App\Models\JobPost;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class RecruitmentService
 {
@@ -21,23 +22,18 @@ class RecruitmentService
      */
     public function rankCandidate(JobApplication $application)
     {
-        if (! $this->apiKey) {
+        if (!$this->apiKey) {
             Log::error('OpenAI API Key is not configured for CV ranking.');
-
             return null;
         }
 
         $job = $application->jobPost;
-
-        // In a real scenario, we would parse the PDF/DOCX here.
-        // For this implementation, we'll assume we extract text from the file path
-        // or use the application's additional fields (experience_years, stack, cover_letter).
-
+        
         $prompt = $this->generateRankingPrompt($application, $job);
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$this->apiKey,
+                'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout(60)->post('https://api.openai.com/v1/chat/completions', [
                 'model' => 'gpt-4o-mini',
@@ -49,8 +45,7 @@ class RecruitmentService
             ]);
 
             if ($response->failed()) {
-                Log::error('OpenAI API Error during ranking: '.$response->body());
-
+                Log::error('OpenAI API Error during ranking: ' . $response->body());
                 return null;
             }
 
@@ -71,7 +66,7 @@ class RecruitmentService
                 return $analysis;
             }
         } catch (\Exception $e) {
-            Log::error('CV Ranking Exception: '.$e->getMessage());
+            Log::error('CV Ranking Exception: ' . $e->getMessage());
         }
 
         return null;
@@ -81,7 +76,7 @@ class RecruitmentService
     {
         $requirements = $job->requirements;
         $stack = implode(', ', $job->stack ?? []);
-
+        
         return "Analyze the following candidate for the position of '{$job->title}'.
         
         Job Requirements:
@@ -106,7 +101,6 @@ class RecruitmentService
         if (preg_match('/```json\s*(.*?)\s*```/s', $content, $matches)) {
             $content = $matches[1];
         }
-
         return trim($content);
     }
 }
