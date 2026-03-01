@@ -22,15 +22,13 @@ return new class extends Migration
             $table->string('expected_salary')->nullable();
             $table->string('experience_years')->nullable();
             $table->text('cover_letter')->nullable();
-            $table->enum('status', [
-                'applied',
-                'shortlisted',
-                'technical_test',
-                'interview',
-                'offer',
-                'hired',
-                'rejected',
-            ])->default('applied');
+            $table->decimal('ranking_score', 5, 2)->nullable();
+            $table->text('cv_analysis')->nullable();
+            $table->string('status')->default('applied');
+            $table->string('task_url')->nullable();
+            $table->string('task_file_path')->nullable();
+            $table->decimal('task_score', 5, 2)->nullable();
+            $table->text('interview_note')->nullable();
             $table->text('admin_note')->nullable();
             $table->timestamps();
         });

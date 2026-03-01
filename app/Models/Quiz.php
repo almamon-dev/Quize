@@ -6,7 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class Quiz extends Model
 {
-    protected $fillable = ['category_id', 'job_post_id', 'title', 'slug', 'token', 'description', 'time_per_question', 'is_published'];
+    protected $fillable = [
+        'category_id', 
+        'job_post_id', 
+        'department_id',
+        'title', 
+        'slug', 
+        'token', 
+        'description', 
+        'type',
+        'time_limit',
+        'pass_percentage',
+        'status',
+        'negative_marking',
+        'randomize_questions'
+    ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 
     public function category()
     {

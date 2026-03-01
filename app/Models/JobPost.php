@@ -15,14 +15,26 @@ class JobPost extends Model
         'company_logo',
         'slug',
         'department',
+        'job_category',
+        'vacancy',
+        'experience_level',
+        'posted_date',
+        'deadline_date',
+        'close_date',
+        'gender',
         'description',
         'requirements',
-        'salary_range',
+        'salary_from',
+        'salary_to',
         'stack',
         'type',
         'location_type',
-        'location',
+        'city',
+        'state',
+        'country',
+        'education_level',
         'status',
+        'department_id',
         'min_quiz_score',
         'min_task_score',
         'technical_assignment',
@@ -31,7 +43,15 @@ class JobPost extends Model
 
     protected $casts = [
         'stack' => 'array',
+        'posted_date' => 'date',
+        'deadline_date' => 'date',
+        'close_date' => 'date',
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 
     public function applications()
     {

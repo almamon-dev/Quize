@@ -9,10 +9,12 @@ use Inertia\Inertia;
 
 class EmailTemplateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
         return Inertia::render('Admin/EmailTemplates/Index', [
-            'templates' => EmailTemplate::latest()->get(),
+            'templates' => EmailTemplate::latest()->paginate($perPage)->withQueryString(),
+            'filters' => $request->only(['per_page']),
         ]);
     }
 

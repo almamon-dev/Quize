@@ -15,7 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('quiz_id')->constrained()->onDelete('cascade');
             $table->text('text');
+            $table->string('image_path')->nullable();
             $table->enum('type', ['mcq', 'text', 'fill_gap']);
+            $table->string('difficulty')->default('medium');
+            $table->text('correct_answer')->nullable();
             $table->float('points')->default(1.0);
             $table->timestamps();
         });

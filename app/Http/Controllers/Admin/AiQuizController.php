@@ -13,7 +13,7 @@ class AiQuizController extends Controller
     {
         $request->validate([
             'topic' => 'required|string|max:255',
-            'count' => 'required|integer|min:1|max:10',
+            'count' => 'required|integer|min:1|max:30',
             'type' => 'required|string|in:mcq,text,fill_gap,combined',
         ]);
 
@@ -40,8 +40,8 @@ class AiQuizController extends Controller
         For 'text', provide the question and the correct answer.
         For 'fill_gap', provide the question with '___' where the gap is and the correct answer.
         Return ONLY a JSON array of objects with the following structure:
-        For mcq: { \"text\": \"...\", \"type\": \"mcq\", \"points\": 1, \"options\": [ { \"text\": \"...\", \"is_correct\": true/false }, ... ] }
-        For text/fill_gap: { \"text\": \"...\", \"type\": \"text\" or \"fill_gap\", \"points\": 1, \"correct_answer\": \"...\" }
+        For mcq: { \"text\": \"...\", \"type\": \"mcq\", \"difficulty\": \"medium\", \"points\": 1, \"options\": [ { \"text\": \"...\", \"is_correct\": true/false }, ... ] }
+        For text/fill_gap: { \"text\": \"...\", \"type\": \"text\" or \"fill_gap\", \"difficulty\": \"medium\", \"points\": 1, \"correct_answer\": \"...\", \"options\": [] }
         Do not include any other text, markdown formatting, or explanations.";
 
         try {

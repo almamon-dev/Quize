@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
     ChevronRight,
@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function Take({ quiz }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
@@ -18,9 +20,21 @@ export default function Take({ quiz }) {
     const [timeLeft, setTimeLeft] = useState(0);
     const [isCompleted, setIsCompleted] = useState(false);
     const [visitor, setVisitor] = useState({ name: "", email: "", phone: "" });
+    const [showRegistration, setShowRegistration] = useState(false);
     const [loginError, setLoginError] = useState(null);
 
-    const questions = quiz.questions || [];
+    const questions = useMemo(() => {
+        let q = quiz.questions || [];
+        if (quiz.randomize_questions) {
+            const shuffled = [...q];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        return q;
+    }, [quiz]);
     const currentQuestion = questions[currentQuestionIndex];
 
     // Timer Logic: Fixed total time for the whole quiz
@@ -40,6 +54,31 @@ export default function Take({ quiz }) {
         return () => clearInterval(timer);
     }, [attemptId, isCompleted]);
 
+    // Anti-cheat: Auto-submit if user changes tabs or leaves the window
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden && attemptId && !isCompleted && !isSubmitting) {
+                // If they leave the tab, instantly submit and mark as completed
+                handleFinish();
+            }
+        };
+
+        const handleWindowBlur = () => {
+            if (attemptId && !isCompleted && !isSubmitting) {
+                // Also trigger if the window loses focus
+                handleFinish();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("blur", handleWindowBlur);
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("blur", handleWindowBlur);
+        };
+    }, [attemptId, isCompleted, isSubmitting]);
+
     const handleStart = async (e) => {
         e.preventDefault();
         setLoginError(null);
@@ -50,7 +89,7 @@ export default function Take({ quiz }) {
             );
             setAttemptId(response.data.attempt_id);
             // Treat the stored value as total quiz minutes
-            const totalSeconds = (quiz.time_per_question || 5) * 60;
+            const totalSeconds = (quiz.time_limit || 30) * 60;
             setTimeLeft(totalSeconds);
             setCurrentQuestionIndex(0);
         } catch (error) {
@@ -87,7 +126,9 @@ export default function Take({ quiz }) {
     };
 
     const handleFinish = async () => {
+        if (isSubmitting || isCompleted) return;
         setIsSubmitting(true);
+        setIsCompleted(true);
         try {
             await axios.post(route("quiz.attempt.complete", attemptId));
             router.get(route("quiz.completed"));
@@ -128,111 +169,152 @@ export default function Take({ quiz }) {
                         <div className="w-full max-w-[680px] bg-white rounded-lg shadow-[0_25px_60px_rgba(0,0,0,0.12)] px-12 py-8 -mt-12 mb-16 relative z-20 border border-gray-50/50 mx-4">
                             <div className="text-center mb-6">
                                 <h1 className="text-[20px] font-black text-gray-900 mb-4 tracking-tighter leading-none">
-                                    {quiz.title || "code"}
+                                    {quiz.title || "Exam"}
                                 </h1>
                                 <div className="flex items-center justify-center gap-2 text-base font-bold text-gray-900">
                                     <span>Total Time:</span>
                                     <span className="bg-[#DF3D41] text-white px-2.5 py-1 rounded text-xs font-black min-w-[50px] text-center shadow-sm">
                                         {parseFloat(
-                                            quiz.time_per_question || 30,
-                                        ).toFixed(2)}
+                                            quiz.time_limit || 30,
+                                        ).toFixed(0)}
                                     </span>
                                     <span>minutes</span>
                                 </div>
                             </div>
 
                             <div className="w-full">
-                                <h2 className="text-2xl font-bold text-[#00D287] mb-6">
-                                    Before We Get Started
-                                </h2>
-
-                                <form
-                                    onSubmit={handleStart}
-                                    className="space-y-8"
-                                >
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-900 flex items-center gap-0.5">
-                                            Full name
-                                            <span className="text-[#DF3D41] font-bold">
-                                                *
-                                            </span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="sdsdas"
-                                            className="w-full px-5 py-3 border border-gray-300 rounded focus:border-[#00D287] outline-none text-sm font-medium transition-colors placeholder:text-gray-300"
-                                            value={visitor.name}
-                                            onChange={(e) =>
-                                                setVisitor({
-                                                    ...visitor,
-                                                    name: e.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-900 flex items-center gap-0.5">
-                                                Email
-                                                <span className="text-[#DF3D41] font-bold">
-                                                    *
-                                                </span>
-                                            </label>
-                                            <input
-                                                type="email"
-                                                required
-                                                placeholder="Enter Your Email"
-                                                className="w-full px-5 py-3 border border-gray-300 rounded focus:border-[#00D287] outline-none text-sm font-medium transition-colors placeholder:text-gray-300"
-                                                value={visitor.email}
-                                                onChange={(e) =>
-                                                    setVisitor({
-                                                        ...visitor,
-                                                        email: e.target.value,
-                                                    })
-                                                }
+                                {!showRegistration ? (
+                                    <div className="w-full">
+                                        <h2 className="text-2xl font-bold text-[#00D287] mb-6 border-b border-gray-100 pb-4">
+                                            Exam Instructions
+                                        </h2>
+                                        
+                                        {quiz.description ? (
+                                            <div 
+                                                className="prose prose-sm max-w-none prose-p:text-gray-600 prose-headings:text-gray-900 prose-a:text-[#00D287] mb-8"
+                                                dangerouslySetInnerHTML={{ __html: quiz.description }}
                                             />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-900 flex items-center gap-0.5">
-                                                Phone number
-                                                <span className="text-[#DF3D41] font-bold">
-                                                    *
-                                                </span>
-                                            </label>
-                                            <input
-                                                type="tel"
-                                                required
-                                                placeholder="Enter Your Phone"
-                                                className="w-full px-5 py-3 border border-gray-300 rounded focus:border-[#00D287] outline-none text-sm font-medium transition-colors placeholder:text-gray-300"
-                                                value={visitor.phone}
-                                                onChange={(e) =>
-                                                    setVisitor({
-                                                        ...visitor,
-                                                        phone: e.target.value,
-                                                    })
-                                                }
-                                            />
+                                        ) : (
+                                            <p className="text-gray-500 font-medium mb-8">
+                                                No specific instructions provided. Please proceed when you are ready.
+                                            </p>
+                                        )}
+
+                                        <div className="pt-4 flex justify-between items-center border-t border-gray-100">
+                                            <div className="text-sm font-bold text-gray-500">
+                                                Passing Score: <span className="text-[#00D287]">{quiz.pass_percentage || 50}%</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setShowRegistration(true)}
+                                                className="px-8 py-3 bg-[#00D287] text-black text-xs font-black rounded hover:bg-[#00bf74] transition-all uppercase tracking-widest shadow-lg shadow-[#00D287]/20 flex items-center gap-2"
+                                            >
+                                                Proceed <ChevronRight size={16} />
+                                            </button>
                                         </div>
                                     </div>
-
-                                    {loginError && (
-                                        <div className="p-4 bg-red-50 text-red-600 text-sm rounded border border-red-100 flex items-center gap-3 font-bold">
-                                            <AlertCircle size={18} />{" "}
-                                            {loginError}
+                                ) : (
+                                    <div className="w-full">
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <button onClick={() => setShowRegistration(false)} className="text-gray-400 hover:text-gray-900 transition-colors">
+                                                <ChevronLeft size={20} />
+                                            </button>
+                                            <h2 className="text-2xl font-bold text-[#00D287]">
+                                                Before We Get Started
+                                            </h2>
                                         </div>
-                                    )}
 
-                                    <div className="pt-4 flex justify-start">
-                                        <button
-                                            type="submit"
-                                            className="px-10 py-3.5 bg-[#00D287] text-black text-xs font-black rounded hover:bg-[#00bf74] transition-all uppercase tracking-widest shadow-lg shadow-[#00D287]/20"
+                                        <form
+                                            onSubmit={handleStart}
+                                            className="space-y-8"
                                         >
-                                            START NOW
-                                        </button>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-gray-900 flex items-center gap-0.5">
+                                                    Full name
+                                                    <span className="text-[#DF3D41] font-bold">
+                                                        *
+                                                    </span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="Enter Your Name"
+                                                    className="w-full px-5 py-3 border border-gray-300 rounded focus:border-[#00D287] outline-none text-sm font-medium transition-colors placeholder:text-gray-300"
+                                                    value={visitor.name}
+                                                    onChange={(e) =>
+                                                        setVisitor({
+                                                            ...visitor,
+                                                            name: e.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold text-gray-900 flex items-center gap-0.5">
+                                                        Email
+                                                        <span className="text-[#DF3D41] font-bold">
+                                                            *
+                                                        </span>
+                                                    </label>
+                                                    <input
+                                                        type="email"
+                                                        required
+                                                        placeholder="Enter Your Email"
+                                                        className="w-full px-5 py-3 border border-gray-300 rounded focus:border-[#00D287] outline-none text-sm font-medium transition-colors placeholder:text-gray-300"
+                                                        value={visitor.email}
+                                                        onChange={(e) =>
+                                                            setVisitor({
+                                                                ...visitor,
+                                                                email: e.target.value,
+                                                            })
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold text-gray-900 flex items-center gap-0.5">
+                                                        Phone number
+                                                        <span className="text-[#DF3D41] font-bold">
+                                                            *
+                                                        </span>
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        required
+                                                        placeholder="Enter Your Phone"
+                                                        className="w-full px-5 py-3 border border-gray-300 rounded focus:border-[#00D287] outline-none text-sm font-medium transition-colors placeholder:text-gray-300"
+                                                        value={visitor.phone}
+                                                        onChange={(e) =>
+                                                            setVisitor({
+                                                                ...visitor,
+                                                                phone: e.target.value,
+                                                            })
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {loginError && (
+                                                <div className="p-4 bg-red-50 text-red-600 text-sm rounded border border-red-100 flex items-center gap-3 font-bold">
+                                                    <AlertCircle size={18} />{" "}
+                                                    {loginError}
+                                                </div>
+                                            )}
+
+                                            <div className="pt-4 flex justify-between items-center border-t border-gray-100">
+                                                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+                                                    {questions.length} Questions Total
+                                                </span>
+                                                <button
+                                                    type="submit"
+                                                    className="px-10 py-3.5 bg-[#00D287] text-black text-xs font-black rounded hover:bg-[#00bf74] transition-all uppercase tracking-widest shadow-lg shadow-[#00D287]/20 flex items-center gap-2"
+                                                >
+                                                    START NOW <ChevronRight size={16} />
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
-                                </form>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -379,11 +461,73 @@ export default function Take({ quiz }) {
                                             },
                                         )}
                                     </div>
+                                ) : currentQuestion.type === "text" ? (
+                                    <div className="relative quiz-answer-editor">
+                                        <style dangerouslySetInnerHTML={{__html: `
+                                            .quiz-answer-editor .ql-toolbar {
+                                                border: none !important;
+                                                border-bottom: 2px solid #f3f4f6 !important;
+                                                padding: 12px 16px !important;
+                                                background-color: #fafafa;
+                                                border-radius: 12px 12px 0 0;
+                                            }
+                                            .quiz-answer-editor .ql-container {
+                                                border: none !important;
+                                                font-family: inherit !important;
+                                                font-size: 1.125rem !important;
+                                                min-height: 200px;
+                                                border-radius: 0 0 12px 12px;
+                                            }
+                                            .quiz-answer-editor .ql-editor {
+                                                min-height: 200px;
+                                                padding: 20px !important;
+                                            }
+                                            .quiz-answer-editor .ql-editor.ql-blank::before {
+                                                color: #d1d5db;
+                                                font-style: normal;
+                                                left: 20px;
+                                            }
+                                            .quiz-answer-editor .bg-white.rounded-xl {
+                                                border-width: 2px;
+                                                border-color: #f3f4f6;
+                                                transition: all 0.2s;
+                                            }
+                                            .quiz-answer-editor .bg-white.rounded-xl:focus-within {
+                                                border-color: #10F097;
+                                                box-shadow: 0 0 0 4px rgba(16, 240, 151, 0.1);
+                                            }
+                                        `}} />
+                                        <div className="bg-white rounded-xl shadow-sm border-2 overflow-hidden transition-all duration-200">
+                                            <ReactQuill 
+                                                theme="snow"
+                                                value={answers[currentQuestion.id]?.user_answer || ""}
+                                                onChange={(content, delta, source, editor) => {
+                                                    if (content !== answers[currentQuestion.id]?.user_answer) {
+                                                        setAnswers({
+                                                            ...answers,
+                                                            [currentQuestion.id]: {
+                                                                user_answer: content,
+                                                            }
+                                                        });
+                                                    }
+                                                }}
+                                                placeholder="Type your answer here..."
+                                                modules={{
+                                                    toolbar: [
+                                                        ['bold', 'italic', 'underline'],
+                                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                                        ['clean']
+                                                    ],
+                                                }}
+                                                className="text-lg font-medium text-gray-800"
+                                            />
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <div className="relative">
+                                    <div className="relative flex flex-col items-center">
                                         <input
                                             type="text"
-                                            className="w-full p-6 border-2 border-gray-100 rounded-xl focus:border-[#10F097] outline-none text-xl transition-all font-medium placeholder:text-gray-300 shadow-sm"
+                                            className="w-full max-w-lg text-center p-6 border-b-4 border-gray-200 bg-gray-50 focus:bg-white focus:border-[#10F097] outline-none text-2xl transition-all font-black placeholder:text-gray-300 placeholder:font-medium shadow-inner rounded-t-xl mx-auto"
                                             placeholder="Type your answer here..."
                                             value={
                                                 answers[currentQuestion.id]
@@ -398,11 +542,12 @@ export default function Take({ quiz }) {
                                                     },
                                                 })
                                             }
-                                            onKeyPress={(e) =>
-                                                e.key === "Enter" &&
-                                                handleNext()
-                                            }
                                         />
+                                        {currentQuestion.type === "fill_gap" && (
+                                            <p className="mt-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                                Please fill in the gap above
+                                            </p>
+                                        )}
                                     </div>
                                 )}
                             </div>

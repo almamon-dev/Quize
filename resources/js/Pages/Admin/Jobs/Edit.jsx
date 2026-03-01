@@ -1,19 +1,29 @@
 import AdminLayout from "@/Layouts/AdminLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Plus } from "lucide-react";
 import RichTextEditor from "@/Components/Form/RichTextEditor";
 
-export default function Edit({ job }) {
+export default function Edit({ job, departments = [] }) {
     const { data, setData, post, put, processing, errors } = useForm({
         title: job.title || "",
         company_name: job.company_name || "",
         department: job.department || "",
+        job_category: job.job_category || "",
+        vacancy: job.vacancy || 1,
+        experience_level: job.experience_level || "",
+        posted_date: job.posted_date ? job.posted_date.substring(0, 10) : "",
+        deadline_date: job.deadline_date ? job.deadline_date.substring(0, 10) : "",
+        close_date: job.close_date ? job.close_date.substring(0, 10) : "",
+        gender: job.gender || "",
         description: job.description || "",
         requirements: job.requirements || "",
-        salary_range: job.salary_range || "",
+        salary_from: job.salary_from || "",
+        salary_to: job.salary_to || "",
         type: job.type || "full_time",
-        location_type: job.location_type || "on_site",
-        location: job.location || "",
+        city: job.city || "",
+        state: job.state || "",
+        country: job.country || "",
+        education_level: job.education_level || "",
         status: job.status || "active",
         stack: job.stack || [],
         technical_assignment: job.technical_assignment || "",
@@ -32,7 +42,7 @@ export default function Edit({ job }) {
         <AdminLayout>
             <Head title={`Edit Job: ${job.title}`} />
 
-            <div className="p-6 max-w-4xl mx-auto">
+            <div className="p-6 max-w-8xl mx-auto">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <Link
@@ -87,23 +97,56 @@ export default function Edit({ job }) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Department
-                                </label>
-                                <input
-                                    type="text"
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-bold text-gray-700">
+                                        Department
+                                    </label>
+                                    <Link
+                                        href={route("admin.departments.create")}
+                                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 transition-colors uppercase tracking-wider"
+                                    >
+                                        <Plus size={10} strokeWidth={3} />
+                                        Add New
+                                    </Link>
+                                </div>
+                                <select
                                     value={data.department}
                                     onChange={(e) =>
                                         setData("department", e.target.value)
                                     }
                                     className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                    placeholder="e.g. Engineering"
-                                />
+                                >
+                                    <option value="">Select Department</option>
+                                    {departments.map((dept) => (
+                                        <option key={dept.id} value={dept.name}>
+                                            {dept.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Job Type
+                                    Job Category
+                                </label>
+                                <select
+                                    value={data.job_category}
+                                    onChange={(e) =>
+                                        setData("job_category", e.target.value)
+                                    }
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                >
+                                    <option value="">Choose...</option>
+                                    <option value="development">Development</option>
+                                    <option value="design">Design</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="sales">Sales</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Job Type *
                                 </label>
                                 <select
                                     value={data.type}
@@ -112,103 +155,208 @@ export default function Edit({ job }) {
                                     }
                                     className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                 >
+                                    <option value="">Choose...</option>
                                     <option value="full_time">Full Time</option>
                                     <option value="part_time">Part Time</option>
                                     <option value="contract">Contract</option>
-                                    <option value="internship">
-                                        Internship
-                                    </option>
+                                    <option value="internship">Internship</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Salary Range
+                                    No. of Vacancy *
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={data.vacancy}
+                                    onChange={(e) => setData("vacancy", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    placeholder="Enter number of vacancies"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Select Experience *
+                                </label>
+                                <select
+                                    value={data.experience_level}
+                                    onChange={(e) => setData("experience_level", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                >
+                                    <option value="">Choose...</option>
+                                    <option value="fresher">Fresher</option>
+                                    <option value="1_yr">1 Yr</option>
+                                    <option value="2_yrs">2 Yrs</option>
+                                    <option value="3_plus_yrs">3+ Yrs</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Posted Date *
+                                </label>
+                                <input
+                                    type="date"
+                                    value={data.posted_date}
+                                    onChange={(e) => setData("posted_date", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-500 font-medium"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Last Date To Apply *
+                                </label>
+                                <input
+                                    type="date"
+                                    value={data.deadline_date}
+                                    onChange={(e) => setData("deadline_date", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-500 font-medium"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Close Date *
+                                </label>
+                                <input
+                                    type="date"
+                                    value={data.close_date}
+                                    onChange={(e) => setData("close_date", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-500 font-medium"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Select Gender: *
+                                </label>
+                                <select
+                                    value={data.gender}
+                                    onChange={(e) => setData("gender", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                >
+                                    <option value="">Choose...</option>
+                                    <option value="any">Any</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Salary From *
                                 </label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold"></span>
+                                    <span className="absolute left-3 top-2.5 text-gray-500 font-bold">$</span>
                                     <input
-                                        type="text"
-                                        value={data.salary_range}
-                                        onChange={(e) =>
-                                            setData(
-                                                "salary_range",
-                                                e.target.value,
-                                            )
-                                        }
+                                        type="number"
+                                        value={data.salary_from}
+                                        onChange={(e) => setData("salary_from", e.target.value)}
                                         className="w-full rounded border-gray-300 pl-7 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                        placeholder="e.g. 80 - 120"
+                                        placeholder="Min salary"
                                     />
                                 </div>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {[
-                                        "30 - 50",
-                                        "60 - 90",
-                                        "100 - 130",
-                                        "150+",
-                                    ].map((val) => (
-                                        <button
-                                            key={val}
-                                            type="button"
-                                            onClick={() =>
-                                                setData("salary_range", val)
-                                            }
-                                            className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-[10px] font-bold text-gray-500 rounded border border-gray-200 transition-colors"
-                                        >
-                                            {val}
-                                        </button>
-                                    ))}
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Salary To *
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-2.5 text-gray-500 font-bold">$</span>
+                                    <input
+                                        type="number"
+                                        value={data.salary_to}
+                                        onChange={(e) => setData("salary_to", e.target.value)}
+                                        className="w-full rounded border-gray-300 pl-7 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        placeholder="Max salary"
+                                    />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Status
-                                </label>
-                                <select
-                                    value={data.status}
-                                    onChange={(e) =>
-                                        setData("status", e.target.value)
-                                    }
-                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="draft">Draft</option>
-                                    <option value="closed">Closed</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Location Type
-                                </label>
-                                <select
-                                    value={data.location_type}
-                                    onChange={(e) =>
-                                        setData("location_type", e.target.value)
-                                    }
-                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                >
-                                    <option value="on_site">On-site</option>
-                                    <option value="remote">Remote</option>
-                                    <option value="hybrid">Hybrid</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Specific Location / City
+                                    Enter City: *
                                 </label>
                                 <input
                                     type="text"
-                                    value={data.location}
-                                    onChange={(e) =>
-                                        setData("location", e.target.value)
-                                    }
+                                    value={data.city}
+                                    onChange={(e) => setData("city", e.target.value)}
                                     className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                    placeholder="e.g. New York, NY or Worldwide"
+                                    placeholder="City"
                                 />
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Enter State: *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.state}
+                                    onChange={(e) => setData("state", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    placeholder="State"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Enter Country: *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.country}
+                                    onChange={(e) => setData("country", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    placeholder="Country"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Enter Education Level: *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.education_level}
+                                    onChange={(e) => setData("education_level", e.target.value)}
+                                    className="w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    placeholder="Education Level"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-gray-100 flex items-center gap-6">
+                            <label className="block text-sm font-bold text-gray-700 whitespace-nowrap">
+                                Status:
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="status"
+                                    value="active"
+                                    checked={data.status === "active"}
+                                    onChange={(e) => setData("status", e.target.value)}
+                                    className="text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300"
+                                />
+                                <span className="text-sm font-medium text-gray-700">Active</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="status"
+                                    value="closed"
+                                    checked={data.status === "closed"}
+                                    onChange={(e) => setData("status", e.target.value)}
+                                    className="text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300"
+                                />
+                                <span className="text-sm font-medium text-gray-700">In Active</span>
+                            </label>
                         </div>
 
                         <div className="mt-6">

@@ -38,4 +38,9 @@ class JobApplication extends Model
     {
         return $this->hasMany(ApplicationLog::class);
     }
+
+    public function interviews()
+    {
+        return $this->hasMany(JobInterview::class);
+    }
 }

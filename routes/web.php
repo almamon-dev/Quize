@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -36,15 +36,21 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Hiring Admin Routes
     Route::resource('jobs', App\Http\Controllers\Admin\JobPostController::class);
+    Route::resource('departments', App\Http\Controllers\Admin\DepartmentController::class);
+    Route::get('/cv-management', [App\Http\Controllers\Admin\ApplicationController::class, 'cvManagement'])->name('cv_management.index');
     Route::get('/applications/pipeline', [App\Http\Controllers\Admin\ApplicationController::class, 'pipeline'])->name('applications.pipeline');
     Route::get('/applications', [App\Http\Controllers\Admin\ApplicationController::class, 'index'])->name('applications.index');
     Route::get('/applications/{application}', [App\Http\Controllers\Admin\ApplicationController::class, 'show'])->name('applications.show');
     Route::post('/applications/{application}/status', [App\Http\Controllers\Admin\ApplicationController::class, 'updateStatus'])->name('applications.status');
     Route::post('/applications/{application}/assessment', [App\Http\Controllers\Admin\ApplicationController::class, 'updateAssessment'])->name('applications.assessment');
     Route::post('/applications/{application}/email', [App\Http\Controllers\Admin\ApplicationController::class, 'sendEmail'])->name('applications.email');
+    Route::post('/applications/{application}/analyze', [App\Http\Controllers\Admin\ApplicationController::class, 'analyze'])->name('applications.analyze');
 
     // Email Template Routes
     Route::resource('email-templates', App\Http\Controllers\Admin\EmailTemplateController::class);
+
+    // Interview Routes
+    Route::resource('interviews', App\Http\Controllers\Admin\InterviewController::class);
 });
 
 // Public Quiz Routes

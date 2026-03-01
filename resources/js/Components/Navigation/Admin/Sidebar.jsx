@@ -31,8 +31,10 @@ import {
     Award,
     BarChart,
     Utensils,
+    Building2,
+    Calendar,
 } from "lucide-react";
-// Fallback translations if LanguageContext is missing
+
 const t = {
     nav: {
         home: "Home",
@@ -129,12 +131,6 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
             route: "dashboard",
         },
         {
-            label: "Users",
-            path: "/admin/users",
-            icon: <Users size={18} />,
-            route: "admin.users.*",
-        },
-        {
             label: "Quizzes",
             path: "/admin/quizzes",
             icon: <GraduationCap size={18} />,
@@ -147,27 +143,34 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
             route: "admin.quizzes.results",
         },
         {
-            label: "Services",
-            path: "/admin/services",
-            icon: <Briefcase size={18} />,
-            route: "admin.services.*",
+            label: "Departments",
+            path: "/admin/departments",
+            icon: <Building2 size={18} />,
+            route: "admin.departments.*",
         },
         {
             label: "Jobs",
-            key: "jobs",
+            path: "/admin/jobs",
             icon: <Briefcase size={18} />,
-            children: [
-                {
-                    label: "All Jobs",
-                    path: "/admin/jobs",
-                    route: "admin.jobs.index",
-                },
-                {
-                    label: "Applications",
-                    path: "/admin/applications",
-                    route: "admin.applications.index",
-                },
-            ],
+            route: "admin.jobs.index",
+        },
+        {
+            label: "CV Management",
+            path: "/admin/cv-management",
+            icon: <LayoutGrid size={18} />,
+            route: "admin.cv_management.index",
+        },
+        {
+            label: "Interviews",
+            path: "/admin/interviews",
+            icon: <Calendar size={18} />,
+            route: "admin.interviews.index",
+        },
+        {
+            label: "Candidates",
+            path: "/admin/applications",
+            icon: <Users size={18} />,
+            route: "admin.applications.index",
         },
         {
             label: "Email Templates",

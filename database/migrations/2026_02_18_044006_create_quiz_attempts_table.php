@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('quiz_attempts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('name')->nullable();
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
             $table->foreignId('quiz_id')->constrained()->onDelete('cascade');
             $table->float('score')->default(0);
             $table->enum('status', ['in_progress', 'completed'])->default('in_progress');

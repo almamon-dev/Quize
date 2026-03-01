@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('quiz_attempts', function (Blueprint $table) {
-            $table->string('name')->nullable()->after('user_id');
-            $table->string('email')->nullable()->after('name');
-            $table->string('phone')->nullable()->after('email');
+        Schema::create('assessments', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
         });
     }
 
@@ -23,8 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('quiz_attempts', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('assessments');
     }
 };

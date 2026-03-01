@@ -7,6 +7,7 @@ use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Models\JobPost;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -15,13 +16,14 @@ class QuizController extends Controller
 {
     public function index()
     {
-        $quizzes = Quiz::with(['jobPost'])
+        $quizzes = Quiz::with(['jobPost', 'department'])
             ->withCount('questions')
             ->addSelect(['unique_attempts_count' => QuizAttempt::selectRaw('count(distinct email)')
                 ->whereColumn('quiz_id', 'quizzes.id')
             ])
             ->latest()
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Admin/Quizzes/Index', [
             'quizzes' => $quizzes,
@@ -32,6 +34,7 @@ class QuizController extends Controller
     {
         return Inertia::render('Admin/Quizzes/Create', [
             'jobPosts' => JobPost::where('status', 'active')->get(['id', 'title']),
+            'departments' => Department::orderBy('name')->get(['id', 'name']),
             'preselectedJobId' => $request->query('job_id'),
         ]);
     }
@@ -40,14 +43,20 @@ class QuizController extends Controller
     {
         $validated = $request->validate([
             'job_post_id' => 'nullable|exists:job_posts,id',
+            'department_id' => 'required|exists:departments,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'time_per_question' => 'required|integer|min:1',
-            'is_published' => 'boolean',
+            'type' => 'required|in:mcq,short_answer,mixed',
+            'time_limit' => 'required|integer|min:1',
+            'pass_percentage' => 'required|integer|min:1|max:100',
+            'status' => 'required|in:draft,published,closed',
+            'negative_marking' => 'boolean',
+            'randomize_questions' => 'boolean',
             'questions' => 'required|array|min:1',
             'questions.*.text' => 'required|string',
             'questions.*.image' => 'nullable|image|max:2048',
             'questions.*.type' => 'required|in:mcq,text,fill_gap',
+            'questions.*.difficulty' => 'required|in:easy,medium,hard',
             'questions.*.points' => 'required|numeric|min:0',
             'questions.*.correct_answer' => 'nullable|string',
             'questions.*.options' => 'required_if:questions.*.type,mcq|array',
@@ -58,10 +67,15 @@ class QuizController extends Controller
         $quiz = Quiz::create([
             'title' => $validated['title'],
             'job_post_id' => $validated['job_post_id'] ?? null,
+            'department_id' => $validated['department_id'],
             'description' => $validated['description'],
-            'time_per_question' => $validated['time_per_question'],
-            'is_published' => $validated['is_published'] ?? false,
-            'token' => Str::random(255),
+            'type' => $validated['type'],
+            'time_limit' => $validated['time_limit'],
+            'pass_percentage' => $validated['pass_percentage'],
+            'status' => $validated['status'],
+            'negative_marking' => $validated['negative_marking'] ?? false,
+            'randomize_questions' => $validated['randomize_questions'] ?? false,
+            'token' => Str::random(25),
         ]);
 
         foreach ($validated['questions'] as $qData) {
@@ -74,6 +88,7 @@ class QuizController extends Controller
                 'text' => $qData['text'],
                 'image_path' => $imagePath,
                 'type' => $qData['type'],
+                'difficulty' => $qData['difficulty'] ?? 'medium',
                 'points' => $qData['points'],
                 'correct_answer' => $qData['correct_answer'] ?? null,
             ]);
@@ -98,6 +113,7 @@ class QuizController extends Controller
         return Inertia::render('Admin/Quizzes/Edit', [
             'quiz' => $quiz,
             'jobPosts' => JobPost::where('status', 'active')->get(['id', 'title']),
+            'departments' => Department::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -105,15 +121,21 @@ class QuizController extends Controller
     {
         $validated = $request->validate([
             'job_post_id' => 'nullable|exists:job_posts,id',
+            'department_id' => 'required|exists:departments,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'time_per_question' => 'required|integer|min:1',
-            'is_published' => 'boolean',
+            'type' => 'required|in:mcq,short_answer,mixed',
+            'time_limit' => 'required|integer|min:1',
+            'pass_percentage' => 'required|integer|min:1|max:100',
+            'status' => 'required|in:draft,published,closed',
+            'negative_marking' => 'boolean',
+            'randomize_questions' => 'boolean',
             'questions' => 'required|array|min:1',
             'questions.*.id' => 'nullable|exists:questions,id',
             'questions.*.text' => 'required|string',
             'questions.*.image' => 'nullable|image|max:2048',
             'questions.*.type' => 'required|in:mcq,text,fill_gap',
+            'questions.*.difficulty' => 'required|in:easy,medium,hard',
             'questions.*.points' => 'required|numeric|min:0',
             'questions.*.correct_answer' => 'nullable|string',
             'questions.*.options' => 'required_if:questions.*.type,mcq|array',
@@ -125,9 +147,14 @@ class QuizController extends Controller
         $quiz->update([
             'title' => $validated['title'],
             'job_post_id' => $validated['job_post_id'] ?? null,
+            'department_id' => $validated['department_id'],
             'description' => $validated['description'],
-            'time_per_question' => $validated['time_per_question'],
-            'is_published' => $validated['is_published'] ?? false,
+            'type' => $validated['type'],
+            'time_limit' => $validated['time_limit'],
+            'pass_percentage' => $validated['pass_percentage'],
+            'status' => $validated['status'],
+            'negative_marking' => $validated['negative_marking'] ?? false,
+            'randomize_questions' => $validated['randomize_questions'] ?? false,
         ]);
 
         // Simple approach: delete existing questions and recreate
@@ -144,6 +171,7 @@ class QuizController extends Controller
                 'text' => $qData['text'],
                 'image_path' => $imagePath,
                 'type' => $qData['type'],
+                'difficulty' => $qData['difficulty'] ?? 'medium',
                 'points' => $qData['points'],
                 'correct_answer' => $qData['correct_answer'] ?? null,
             ]);
@@ -168,12 +196,61 @@ class QuizController extends Controller
         return redirect()->route('admin.quizzes.index')->with('success', 'Quiz deleted successfully.');
     }
 
-    public function results()
+    public function results(Request $request)
     {
-        $attempts = QuizAttempt::with(['user', 'quiz'])->latest()->get();
+        $query = QuizAttempt::with(['quiz' => function($q) {
+                $q->withSum('questions', 'points');
+            }, 'user'])
+            ->withSum('answers', 'marks_awarded');
+
+        // Apply filters
+        if ($request->filled('quiz_id')) {
+            $query->where('quiz_id', $request->quiz_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Sorting
+        $query->latest();
+
+        $statsQuery = clone $query;
+        $allStatsData = $statsQuery->get();
+        $totalAttemptsCount = $allStatsData->count();
+        $successCount = 0;
+        $highScoreCount = 0;
+
+        foreach ($allStatsData as $a) {
+            $maxScore = $a->quiz->questions_sum_points ?? 1;
+            $maxScore = $maxScore > 0 ? $maxScore : 1; 
+            $pct = ($a->score / $maxScore) * 100;
+            if ($pct >= 70) $successCount++;
+            if ($pct >= 90) $highScoreCount++;
+        }
+
+        $metrics = [
+            'total_attempts' => $totalAttemptsCount,
+            'success_rate' => $totalAttemptsCount > 0 ? round(($successCount / $totalAttemptsCount) * 100) : 0,
+            'high_scores' => $highScoreCount,
+        ];
+
+        $perPage = $request->get('per_page', 10);
+        $attempts = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Quizzes/Results', [
             'attempts' => $attempts,
+            'metrics' => $metrics,
+            'quizzes' => Quiz::all(['id', 'title']),
+            'filters' => $request->only(['search', 'quiz_id', 'per_page']),
         ]);
     }
 
